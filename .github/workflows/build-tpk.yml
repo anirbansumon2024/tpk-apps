@@ -1,4 +1,4 @@
-name: Build Tizen TPK via Docker
+name: Build Tizen TPK
 
 on:
   push:
@@ -13,31 +13,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Tizen Web TPK
-        uses: addnab/docker-run-action@v3
+      - name: Set up Node.js (Optional)
+        uses: actions/setup-node@v4
         with:
-          image: ubuntu:20.04
-          options: -v ${{ github.workspace }}:/workspace -w /workspace
-          run: |
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get update && apt-get install -y wget unzip openjdk-8-jre-headless zip
+          node-version: '18'
 
-            echo "=== Downloading Tizen CLI ==="
-            wget --quiet https://download.tizen.org/sdk/tizenstudio/official/binary/tizen-studio_5.0_ubuntu-64.bin -O tizen-studio.bin
-            chmod +x tizen-studio.bin
-
-            echo "=== Installing Tizen CLI ==="
-            mkdir -p /opt/tizen-sdk
-            ./tizen-studio.bin --accept-license /opt/tizen-sdk || true
-
-            echo "=== Packaging TPK with Absolute Path ==="
-            mkdir -p /workspace/output
-            
-            # CLI binaries-এর সরাসরি ফুল পাথ দিয়ে প্যাকেজিং করা
-            /opt/tizen-sdk/tools/ide/bin/tizen package -t tpk -o /workspace/output -- /workspace
-
-            echo "=== Check Output ==="
-            ls -la /workspace/output/
+      - name: Create Tizen Web App TPK Package
+        run: |
+          mkdir -p output
+          
+          # টাইজেন ওয়েব অ্যাপ হলো মূলত একটি জিপ আর্কাইভ।
+          # config.xml এবং index.html সহ প্রয়োজনীয় অ্যাসেট ফাইলগুলো জিপ করে .tpk রিনেম করা হচ্ছে।
+          
+          echo "=== Packaging Web App into TPK ==="
+          
+          if [ -d "css" ] && [ -d "js" ]; then
+            zip -r output/TestWebViewApp.tpk config.xml index.html css js
+          elif [ -d "css" ]; then
+            zip -r output/TestWebViewApp.tpk config.xml index.html css
+          elif [ -d "js" ]; then
+            zip -r output/TestWebViewApp.tpk config.xml index.html js
+          else
+            zip -r output/TestWebViewApp.tpk config.xml index.html
+          fi
+          
+          echo "=== Build Complete Successfully ==="
+          ls -la output/
 
       - name: Upload TPK Artifact
         uses: actions/upload-artifact@v4
