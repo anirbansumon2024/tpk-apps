@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tizen Test App</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 2px solid #38bdf8;
+        }
+        h1 { color: #38bdf8; margin-bottom: 10px; }
+        p { font-size: 1.2rem; color: #94a3b8; }
+        .status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #22c55e;
+            color: #000;
+            font-weight: bold;
+            border-radius: 6px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Tizen WebView Test App</h1>
+        <p>Built via GitHub Actions & Docker</p>
+        <div class="status">App Status: Running Successfully</div>
+    </div>
+
+    <script>
+        // Tizen Remote Controller Back Key Handler
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 10009 || e.keyCode === 27) { // 10009 is Tizen Return Key
+                try {
+                    tizen.application.getCurrentApplication().exit();
+                } catch (err) {
+                    console.log("Exit failed", err);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
