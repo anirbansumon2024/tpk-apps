@@ -13,28 +13,32 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Build TPK using Tizen CLI Docker
-        run: |
-          mkdir -p output
-          
-          # Docker কন্টেইনার দিয়ে Tizen Web App বিল্ড ও প্যাকেজ করা
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            tizen/tizen-studio-cli:latest /bin/bash -c "
-              echo '=== Starting Tizen Packaging ==='
-              
-              # Web App প্যাকেজিং (Unsigned Debug TPK)
-              tizen package -t tpk -o /workspace/output -- /workspace
-              
-              echo '=== Build Complete ==='
-            "
+      - name: Build Tizen Web TPK
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ubuntu:20.04
+          options: -v ${{ github.workspace }}:/workspace -w /workspace
+          run: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update && apt-get install -y wget unzip openjdk-8-jre-headless zip
 
-      - name: Check Built Output
-        run: |
-          ls -la output/
+            echo "=== Downloading Tizen Web CLI ==="
+            wget --quiet https://download.tizen.org/sdk/tizenstudio/official/binary/tizen-studio_5.0_ubuntu-64.bin -O tizen-studio.bin
+            chmod +x tizen-studio.bin
+
+            echo "=== Installing Tizen Studio CLI ==="
+            mkdir -p /opt/tizen-sdk
+            ./tizen-studio.bin --accept-license /opt/tizen-sdk || true
+
+            export PATH=$PATH:/opt/tizen-sdk/tools/ide/bin
+
+            echo "=== Building TPK ==="
+            mkdir -p /workspace/output
+            tizen package -t tpk -o /workspace/output -- /workspace
+
+            echo "=== Build Finished Successfully ==="
 
       - name: Upload TPK Artifact
         uses: actions/upload-artifact@v4
