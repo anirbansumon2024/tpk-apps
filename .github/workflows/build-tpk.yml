@@ -1,0 +1,44 @@
+name: Build Tizen TPK via Docker
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-tizen-tpk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build TPK using Tizen CLI Docker
+        run: |
+          mkdir -p output
+          
+          # Docker কন্টেইনার দিয়ে Tizen Web App বিল্ড ও প্যাকেজ করা
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            tizen/tizen-studio-cli:latest /bin/bash -c "
+              echo '=== Starting Tizen Packaging ==='
+              
+              # Web App প্যাকেজিং (Unsigned Debug TPK)
+              tizen package -t tpk -o /workspace/output -- /workspace
+              
+              echo '=== Build Complete ==='
+            "
+
+      - name: Check Built Output
+        run: |
+          ls -la output/
+
+      - name: Upload TPK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tizen-Web-App-TPK
+          path: output/*.tpk
+          if-no-files-found: error
